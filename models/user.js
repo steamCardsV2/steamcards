@@ -3,7 +3,9 @@ const Schema = mongoose.Schema
 const passportLocalMongoose = require('passport-local-mongoose')
 
 var User = new Schema({
-  profile: Object
+  steamId: String,
+  avatar: String,
+  personaName: String
 })
 
 User.plugin(passportLocalMongoose)

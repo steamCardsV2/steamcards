@@ -18,35 +18,24 @@ passport.use(new SteamStrategy({
   realm: 'http://steamcards.cn/',
   apiKey: '4CAA9BCAA65B878DE302F03FB40B392E'
 }, function(identifier, profile, done) {
-  User.findOne({
-    profile: {
-      _json: {
-        steamid: profile._json.steamid
-      }
-    }
-  }).then(user => {
-    if (!user) {
-      // 新用户第一次登录
-      const newUser = new User({
-        profile
-      })
-      newUser.save()
-        .then(() => {
-          done(newUser)
-        })
-        .catch(err => {
-          console.error(err)
-          done(null)
-        })
-    } else {
-      done(user)
-    }
-  })
+  done(null, new User({
+    steamId: profile._json.steamid,
+    personaName: profile._json.personaname,
+    avatar: profile._json.avatar
+  }))
 }))
 
 // use static serialize and deserialize of model for passport session support
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
+// passport.serializeUser(User.serializeUser());
+// passport.deserializeUser(User.deserializeUser());
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(user, done) {
+  done(null, user);
+});
+
 
 // Create a new Express application.
 var app = express();

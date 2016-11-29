@@ -2,5 +2,5 @@
 <% if (!user) { %>
 		<a class="pure-button pure-button-primary" href="/auth/steam">使用 Steam 登录</a>
 <% } else { %>
-	<p>Hello, <%= user.username %>. View your <a href="/profile">profile</a>.</p>
+		<p>Hello, <img src="<%= user.avatar %>"></img> <%= user.personaName %>. View your <a href="/profile">profile</a>.</p>
 <% } %>

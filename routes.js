@@ -5,16 +5,17 @@ module.exports = (app, passport) => {
             // this function will not be called.
           });
 
-  app.get('/auth/steam/return', passport.authenticate('steam', { failureRedirect: '/login' }),
+  app.get('/auth/steam/return',
+          passport.authenticate('steam', { failureRedirect: '/login' }),
           (req, res) => {
             // Successful authentication, redirect home.
-            console.log('succuess')
             res.redirect('/');
           })
 
   // Define routes.
   app.get('/',
           (req, res) => {
+            console.log(req.user)
             res.render('home', { user: req.user });
           });
 
