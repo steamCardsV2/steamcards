@@ -1,5 +1,6 @@
+<% include ./partials/header %>
 <% if (!user) { %>
-	<p>Welcome! Please <a href="/login">log in</a>.</p>
+		<a class="pure-button pure-button-primary" href="/auth/steam">使用 Steam 登录</a>
 <% } else { %>
 	<p>Hello, <%= user.username %>. View your <a href="/profile">profile</a>.</p>
 <% } %>

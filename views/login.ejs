@@ -1,13 +1,23 @@
-<form action="/login" method="post">
-	<div>
-	<label>Username:</label>
-	<input type="text" name="username"/><br/>
-	</div>
-	<div>
-	<label>Password:</label>
-	<input type="password" name="password"/>
-	</div>
-	<div>
-	<input type="submit" value="Submit"/>
-	</div>
+<% include ./partials/header %>
+
+<form class="pure-form pure-form-stacked" action="/login" method="post">
+    <fieldset>
+        <legend>登录</legend>
+				<% if (failed) { %>
+						<span class="failed-message">登录失败，用户名或密码错误</span>
+				<% } %>
+        <label for="username">用户名</label>
+        <input id="username" name="username" placeholder="用户名">
+
+        <label for="password">密码</label>
+        <input id="password" name="password" type="password" placeholder="密码">
+
+				<input type="submit" value="登录" class="pure-button pure-button-primary"/>
+    </fieldset>
 </form>
+
+<style>
+ .failed-message {
+   color: red
+ }
+</style>

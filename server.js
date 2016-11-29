@@ -1,46 +1,52 @@
-var express = require('express');
-var passport = require('passport');
-var Strategy = require('passport-local').Strategy;
-var db = require('./db');
+const express = require('express')
+const passport = require('passport')
+const User = require('./models/user')
+const mongoose = require('mongoose')
+// const LocalStrategy = require('passport-local').Strategy;
+const SteamStrategy = require('passport-steam').Strategy
 
+const applyRoutes = require('./routes')
 
-// Configure the local strategy for use by Passport.
-//
-// The local strategy require a `verify` function which receives the credentials
-// (`username` and `password`) submitted by the user.  The function must verify
-// that the password is correct and then invoke `cb` with a user object, which
-// will be set at `req.user` in route handlers after authentication.
-passport.use(new Strategy(
-  function(username, password, cb) {
-    db.users.findByUsername(username, function(err, user) {
-      if (err) { return cb(err); }
-      if (!user) { return cb(null, false); }
-      if (user.password != password) { return cb(null, false); }
-      return cb(null, user);
-    });
-  }));
+mongoose.Promise = global.Promise;
+mongoose.connect('mongodb://127.0.0.1:27017/asf-server')
+  .then(() => console.log('Mongodb connected!'))
+  .catch(err => console.err(err))
 
+// passport.use(new LocalStrategy(User.authenticate()));
+passport.use(new SteamStrategy({
+  returnURL: 'http://steamcards.cn/auth/steam/return',
+  realm: 'http://steamcards.cn/',
+  apiKey: '4CAA9BCAA65B878DE302F03FB40B392E'
+}, function(identifier, profile, done) {
+  User.findOne({
+    profile: {
+      _json: {
+        steamid: profile._json.steamid
+      }
+    }
+  }).then(user => {
+    if (!user) {
+      // 新用户第一次登录
+      const newUser = new User({
+        profile
+      })
+      newUser.save()
+        .then(() => {
+          done(newUser)
+        })
+        .catch(err => {
+          console.error(err)
+          done(null)
+        })
+    } else {
+      done(user)
+    }
+  })
+}))
 
-// Configure Passport authenticated session persistence.
-//
-// In order to restore authentication state across HTTP requests, Passport needs
-// to serialize users into and deserialize users out of the session.  The
-// typical implementation of this is as simple as supplying the user ID when
-// serializing, and querying the user record by ID from the database when
-// deserializing.
-passport.serializeUser(function(user, cb) {
-  cb(null, user.id);
-});
-
-passport.deserializeUser(function(id, cb) {
-  db.users.findById(id, function (err, user) {
-    if (err) { return cb(err); }
-    cb(null, user);
-  });
-});
-
-
-
+// use static serialize and deserialize of model for passport session support
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 // Create a new Express application.
 var app = express();
@@ -61,33 +67,6 @@ app.use(require('express-session')({ secret: 'keyboard cat', resave: false, save
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Define routes.
-app.get('/',
-  function(req, res) {
-    res.render('home', { user: req.user });
-  });
+applyRoutes(app, passport)
 
-app.get('/login',
-  function(req, res){
-    res.render('login');
-  });
-  
-app.post('/login', 
-  passport.authenticate('local', { failureRedirect: '/login' }),
-  function(req, res) {
-    res.redirect('/');
-  });
-  
-app.get('/logout',
-  function(req, res){
-    req.logout();
-    res.redirect('/');
-  });
-
-app.get('/profile',
-  require('connect-ensure-login').ensureLoggedIn(),
-  function(req, res){
-    res.render('profile', { user: req.user });
-  });
-
-app.listen(3000);
+app.listen(80);
